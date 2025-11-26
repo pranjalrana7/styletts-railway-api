@@ -1,8 +1,7 @@
-TTS==0.22.0
 fastapi
 uvicorn
+torch
+torchaudio
+transformers
+gdown
 numpy
-scipy
-soundfile
-numba
-protobuf
