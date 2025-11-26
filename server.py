@@ -1,26 +1,40 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from fastapi.responses import FileResponse
 import torch
-import uuid
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
 import os
-from TTS.api import TTS
+import gdown
 
 app = FastAPI()
 
-# Load a lightweight StyleTTS model (works on CPU)
-model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
-tts = TTS(model_name)
+# Lazy model load
+model = None
 
-class TTSRequest(BaseModel):
-    text: str
+MODEL_PATH = "styletts2.pt"
+MODEL_URL = "https://drive.google.com/uc?id=1yqaC7uNqjaWg5B8yPXoD3bMBDZomjNCE"
 
-@app.post("/tts")
-async def generate_tts(req: TTSRequest):
-    try:
-        output_path = f"{uuid.uuid4()}.wav"
-        tts.tts_to_file(text=req.text, file_path=output_path)
+def load_styletts2():
+    global model
+    if os.path.exists(MODEL_PATH) is False:
+        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+    
+    if model is None:
+        model = torch.jit.load(MODEL_PATH, map_location="cpu")
+    return model
 
-        return FileResponse(output_path, media_type="audio/wav", filename="output.wav")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+async def root():
+    return {"status": "StyleTTS2 API running"}
+
+
+@app.get("/tts")
+async def tts(text: str = "Hello from StyleTTS2"):
+    m = load_styletts2()
+
+    with torch.no_grad():
+        audio = m(text)
+
+    out_path = "output.wav"
+    torchaudio.save(out_path, audio.unsqueeze(0), 22050)
+
+    return FileResponse(out_path, media_type="audio/wav")
