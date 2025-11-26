@@ -1,7 +1,6 @@
 fastapi
-uvicorn
-torch
-torchaudio
-transformers
-gdown
+uvicorn[standard]
+TTS
+pydub
+soundfile
 numpy
