@@ -1,6 +1,11 @@
-FROM jrottenberg/ffmpeg:6.0-alpine
+FROM node:20-alpine
+
+# Install FFmpeg
+RUN apk add --no-cache ffmpeg
+
 WORKDIR /app
-COPY server.js .
-COPY package*.json .
+COPY package*.json ./
 RUN npm install
+COPY server.js .
+
 CMD ["node", "server.js"]
