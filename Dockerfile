@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install FFmpeg
-RUN apk add --no-cache ffmpeg
+# Install FFmpeg + build tools
+RUN apk add --no-cache ffmpeg python3 make g++
 
 WORKDIR /app
 
